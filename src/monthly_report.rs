@@ -1,6 +1,6 @@
+use crate::balance::Balance;
 use chrono::Datelike;
 use ledger_parser::{Ledger, LedgerItem};
-use crate::balance::Balance;
 
 #[derive(Debug, Clone)]
 pub struct MonthlyBalance {
@@ -46,7 +46,8 @@ impl<'a> From<&'a Ledger> for MonthlyReport {
 
         for item in &ledger.items {
             if let LedgerItem::Transaction(transaction) = item {
-                if transaction.date.year() != current_year || transaction.date.month() != current_month
+                if transaction.date.year() != current_year
+                    || transaction.date.month() != current_month
                 {
                     // begin new month
 

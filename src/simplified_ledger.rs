@@ -1,26 +1,33 @@
-use std::{fmt, io};
 use ledger_parser::*;
+use std::{fmt, io};
 
 ///
 /// Main document. Contains transactions and/or commodity prices.
 ///
+/// TODO: this was previously the result type from ledger-parser crate.
+/// Consider if this type is needed anymore.
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct SimplifiedLedger {
     pub commodity_prices: Vec<CommodityPrice>,
+    // TODO: simplify transactions to auto calculate omitted amounts
     pub transactions: Vec<Transaction>,
 }
 
 impl fmt::Display for SimplifiedLedger {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.to_string_pretty(&SerializerSettings::default()))?;
+        write!(
+            f,
+            "{}",
+            self.to_string_pretty(&SerializerSettings::default())
+        )?;
         Ok(())
     }
 }
 
 impl Serializer for SimplifiedLedger {
     fn write<W>(&self, writer: &mut W, settings: &SerializerSettings) -> Result<(), io::Error>
-        where
-            W: io::Write,
+    where
+        W: io::Write,
     {
         let mut first = true;
 

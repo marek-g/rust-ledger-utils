@@ -1,6 +1,6 @@
-use std::collections::HashMap;
 use crate::account_balance::AccountBalance;
 use crate::balance::Balance;
+use std::collections::HashMap;
 
 /// Balance of one or more accounts.
 /// Converted to a tree.
@@ -14,7 +14,7 @@ impl TreeBalanceNode {
     pub fn new() -> Self {
         TreeBalanceNode {
             balance: AccountBalance::new(),
-            children: HashMap::new()
+            children: HashMap::new(),
         }
     }
 }
@@ -29,7 +29,9 @@ impl From<Balance> for TreeBalanceNode {
             node.balance += &account_balance;
 
             for path_part in path {
-                let child_node = node.children.entry(path_part.to_string())
+                let child_node = node
+                    .children
+                    .entry(path_part.to_string())
                     .or_insert_with(TreeBalanceNode::new);
                 node = child_node;
                 node.balance += &account_balance;

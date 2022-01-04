@@ -1,5 +1,7 @@
 use crate::prices::{Prices, PricesError};
-use ledger_parser::{Amount, Commodity, CommodityPosition, Ledger, LedgerItem, Posting, Reality, Transaction};
+use ledger_parser::{
+    Amount, Commodity, CommodityPosition, Ledger, LedgerItem, Posting, Reality, Transaction,
+};
 use rust_decimal::RoundingStrategy;
 
 /// Handle foreign currencies.

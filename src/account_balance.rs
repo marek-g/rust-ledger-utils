@@ -1,6 +1,6 @@
+use crate::prices::{Prices, PricesError};
 use chrono::NaiveDate;
 use ledger_parser::*;
-use crate::prices::{Prices, PricesError};
 use rust_decimal::Decimal;
 use rust_decimal::RoundingStrategy;
 use std::collections::HashMap;
@@ -14,6 +14,12 @@ use std::ops::SubAssign;
 #[derive(Clone)]
 pub struct AccountBalance {
     pub amounts: HashMap<String, Amount>,
+}
+
+impl Default for AccountBalance {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl AccountBalance {

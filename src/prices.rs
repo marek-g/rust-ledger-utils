@@ -150,17 +150,17 @@ fn get_prices_from_transactions(ledger: &Ledger) -> Vec<CommodityPrice> {
             // TODO: handle empty amounts & balance verifications
             if transaction.postings.len() == 2
                 && transaction.postings[0]
-                .amount
-                .clone()
-                .unwrap()
-                .commodity
-                .name
-                != transaction.postings[1]
-                .amount
-                .clone()
-                .unwrap()
-                .commodity
-                .name
+                    .amount
+                    .clone()
+                    .unwrap()
+                    .commodity
+                    .name
+                    != transaction.postings[1]
+                        .amount
+                        .clone()
+                        .unwrap()
+                        .commodity
+                        .name
                 && transaction.postings[0].amount.clone().unwrap().quantity != Decimal::new(0, 0)
                 && transaction.postings[1].amount.clone().unwrap().quantity != Decimal::new(0, 0)
             {
