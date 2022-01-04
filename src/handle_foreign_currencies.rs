@@ -93,7 +93,7 @@ where
             main_currency_amount.quantity = -main_currency_amount.quantity;
             new_postings.push(Posting {
                 comment: Some("Auto-generated".to_string()),
-                account: "Przychody:Kryptowaluty:Wymiana".to_string(),
+                account: "Trading:Exchange".to_string(),
                 reality: Reality::Real,
                 status: None,
                 amount: Some(main_currency_amount),
@@ -101,7 +101,7 @@ where
             });
             new_postings.push(Posting {
                 comment: Some("Auto-generated".to_string()),
-                account: "Przychody:Kryptowaluty:Wymiana".to_string(),
+                account: "Trading:Exchange".to_string(),
                 reality: Reality::Real,
                 status: None,
                 amount: Some(foreign_amount),
@@ -164,7 +164,7 @@ where
 
     transaction.postings.push(Posting {
         comment: Some("Auto-generated".to_string()),
-        account: "Przychody:Kryptowaluty:Wymiana".to_string(),
+        account: "Trading:Exchange".to_string(),
         reality: Reality::Real,
         status: None,
         amount: Some(amount1),
@@ -172,7 +172,7 @@ where
     });
     transaction.postings.push(Posting {
         comment: Some("Auto-generated".to_string()),
-        account: "Przychody:Kryptowaluty:Wymiana".to_string(),
+        account: "Trading:Exchange".to_string(),
         reality: Reality::Real,
         status: None,
         amount: Some(amount2),
@@ -230,7 +230,7 @@ where
             main_currency_amount.quantity = -main_currency_amount.quantity;
             new_postings.push(Posting {
                 comment: Some("Auto-generated".to_string()),
-                account: "Przychody:Kryptowaluty:Wymiana".to_string(),
+                account: "Trading:Exchange".to_string(),
                 reality: Reality::Real,
                 status: None,
                 amount: Some(main_currency_amount),
@@ -238,7 +238,7 @@ where
             });
             new_postings.push(Posting {
                 comment: Some("Auto-generated".to_string()),
-                account: "Przychody:Kryptowaluty:Wymiana".to_string(),
+                account: "Trading:Exchange".to_string(),
                 reality: Reality::Real,
                 status: None,
                 amount: Some(foreign_amount),
