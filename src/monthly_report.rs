@@ -26,6 +26,12 @@ pub struct MonthlyReport {
     pub monthly_balances: Vec<MonthlyBalance>,
 }
 
+impl Default for MonthlyReport {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MonthlyReport {
     pub fn new() -> MonthlyReport {
         MonthlyReport {

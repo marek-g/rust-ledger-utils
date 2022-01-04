@@ -19,6 +19,12 @@ impl TreeBalanceNode {
     }
 }
 
+impl Default for TreeBalanceNode {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl From<Balance> for TreeBalanceNode {
     fn from(balance: Balance) -> Self {
         let mut root = TreeBalanceNode::new();

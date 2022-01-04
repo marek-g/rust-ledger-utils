@@ -95,10 +95,10 @@ impl Prices {
     ) -> Result<&RatesTable, PricesError> {
         self.rates
             .get(commodities_pair)
-            .ok_or(PricesError::NoSuchCommoditiesPair(commodities_pair.clone()))
+            .ok_or_else(|| PricesError::NoSuchCommoditiesPair(commodities_pair.clone()))
     }
 
-    fn add_prices(&mut self, prices: &Vec<CommodityPrice>) {
+    fn add_prices(&mut self, prices: &[CommodityPrice]) {
         for price in prices {
             self.add_price(
                 &price.commodity_name,

@@ -113,7 +113,7 @@ mod tests {
                 transactions: vec![
                     Transaction {
                         comment: Some("Comment Line 1\nComment Line 2".to_string()),
-                        date: NaiveDate::from_ymd(2018, 10, 01),
+                        date: NaiveDate::from_ymd(2018, 10, 1),
                         effective_date: Some(NaiveDate::from_ymd(2018, 10, 14)),
                         status: Some(TransactionStatus::Pending),
                         code: Some("123".to_string()),
@@ -151,7 +151,7 @@ mod tests {
                     },
                     Transaction {
                         comment: None,
-                        date: NaiveDate::from_ymd(2018, 10, 01),
+                        date: NaiveDate::from_ymd(2018, 10, 1),
                         effective_date: Some(NaiveDate::from_ymd(2018, 10, 14)),
                         status: Some(TransactionStatus::Pending),
                         code: Some("123".to_string()),

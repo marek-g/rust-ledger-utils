@@ -12,6 +12,12 @@ pub struct Balance {
     pub account_balances: HashMap<String, AccountBalance>,
 }
 
+impl Default for Balance {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Balance {
     pub fn new() -> Balance {
         Balance {
