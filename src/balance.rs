@@ -24,7 +24,7 @@ impl Balance {
             let account_balance = self
                 .account_balances
                 .entry(posting.account.clone())
-                .or_insert_with(|| AccountBalance::new());
+                .or_insert_with(AccountBalance::new);
 
             // TODO: handle empty amounts & balance verifications
             account_balance
@@ -53,7 +53,7 @@ impl Balance {
         let empties: Vec<String> = self
             .account_balances
             .iter()
-            .filter(|&(_, account_balance)| account_balance.amounts.len() == 0)
+            .filter(|&(_, account_balance)| account_balance.amounts.is_empty())
             .map(|(k, _)| k.clone())
             .collect();
         for empty in empties {

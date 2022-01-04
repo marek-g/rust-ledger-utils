@@ -131,10 +131,10 @@ where
     }
 
     // is this a transaction between different commodities
-    if let None = transaction.postings[0].amount {
+    if transaction.postings[0].amount.is_none() {
         return;
     }
-    if let None = transaction.postings[1].amount {
+    if transaction.postings[1].amount.is_none() {
         return;
     }
     let commodity1_name = &transaction.postings[0]

@@ -61,8 +61,8 @@ impl Prices {
             rates: HashMap::new(),
         };
 
-        result.add_prices(&get_commodity_prices(&ledger));
-        result.add_prices(&get_prices_from_transactions(&ledger));
+        result.add_prices(&get_commodity_prices(ledger));
+        result.add_prices(&get_prices_from_transactions(ledger));
 
         result
     }
@@ -94,7 +94,7 @@ impl Prices {
         commodities_pair: &CommoditiesPair,
     ) -> Result<&RatesTable, PricesError> {
         self.rates
-            .get(&commodities_pair)
+            .get(commodities_pair)
             .ok_or(PricesError::NoSuchCommoditiesPair(commodities_pair.clone()))
     }
 
@@ -125,7 +125,7 @@ impl Prices {
         let commodities_pair = CommoditiesPair::new(src_commodity_name, dst_commodity_name);
         self.rates
             .entry(commodities_pair)
-            .or_insert_with(|| RatesTable::new())
+            .or_insert_with(RatesTable::new)
             .table
             .entry(date)
             .and_modify(|r| *r = rate)

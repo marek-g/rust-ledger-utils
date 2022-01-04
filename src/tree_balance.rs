@@ -24,13 +24,13 @@ impl From<Balance> for TreeBalanceNode {
         let mut root = TreeBalanceNode::new();
 
         for (account_name, account_balance) in balance.account_balances {
-            let path = account_name.split(":");
+            let path = account_name.split(':');
             let mut node = &mut root;
             node.balance += &account_balance;
 
             for path_part in path {
                 let child_node = node.children.entry(path_part.to_string())
-                    .or_insert_with(|| TreeBalanceNode::new());
+                    .or_insert_with(TreeBalanceNode::new);
                 node = child_node;
                 node.balance += &account_balance;
             }
