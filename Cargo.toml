@@ -2,7 +2,7 @@
 name = "ledger-utils"
 version = "0.1.0"
 authors = ["Marek Gibek <marek-dev@yandex.com>"]
-description = "Ledger-cli [Ledger-cli](https://www.ledger-cli.org/) file processing tools in Rust, useful for calculating balances, creating reports etc."
+description = "Ledger-cli (https://www.ledger-cli.org/) file processing Rust library, useful for calculating balances, creating reports etc."
 license = "Unlicense"
 repository = "https://github.com/marek-g/rust-ledger-utils"
 readme = "README.md"
