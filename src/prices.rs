@@ -153,16 +153,30 @@ fn get_prices_from_transactions(ledger: &Ledger) -> Vec<CommodityPrice> {
                     .amount
                     .clone()
                     .unwrap()
+                    .amount
                     .commodity
                     .name
                     != transaction.postings[1]
                         .amount
                         .clone()
                         .unwrap()
+                        .amount
                         .commodity
                         .name
-                && transaction.postings[0].amount.clone().unwrap().quantity != Decimal::new(0, 0)
-                && transaction.postings[1].amount.clone().unwrap().quantity != Decimal::new(0, 0)
+                && transaction.postings[0]
+                    .amount
+                    .clone()
+                    .unwrap()
+                    .amount
+                    .quantity
+                    != Decimal::new(0, 0)
+                && transaction.postings[1]
+                    .amount
+                    .clone()
+                    .unwrap()
+                    .amount
+                    .quantity
+                    != Decimal::new(0, 0)
             {
                 result.push(CommodityPrice {
                     datetime: transaction.date.and_hms(0, 0, 0),
@@ -170,12 +184,28 @@ fn get_prices_from_transactions(ledger: &Ledger) -> Vec<CommodityPrice> {
                         .amount
                         .clone()
                         .unwrap()
+                        .amount
                         .commodity
                         .name,
                     amount: Amount {
-                        quantity: -transaction.postings[1].amount.clone().unwrap().quantity
-                            / transaction.postings[0].amount.clone().unwrap().quantity,
-                        commodity: (transaction.postings[1]).amount.clone().unwrap().commodity,
+                        quantity: -transaction.postings[1]
+                            .amount
+                            .clone()
+                            .unwrap()
+                            .amount
+                            .quantity
+                            / transaction.postings[0]
+                                .amount
+                                .clone()
+                                .unwrap()
+                                .amount
+                                .quantity,
+                        commodity: (transaction.postings[1])
+                            .amount
+                            .clone()
+                            .unwrap()
+                            .amount
+                            .commodity,
                     },
                 })
             }

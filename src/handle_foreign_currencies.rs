@@ -1,6 +1,7 @@
 use crate::prices::{Prices, PricesError};
 use ledger_parser::{
-    Amount, Commodity, CommodityPosition, Ledger, LedgerItem, Posting, Reality, Transaction,
+    Amount, Commodity, CommodityPosition, Ledger, LedgerItem, Posting, PostingAmount, Reality,
+    Transaction,
 };
 use rust_decimal::RoundingStrategy;
 
@@ -63,14 +64,14 @@ where
     for posting in transaction.postings.iter_mut() {
         if is_income_account(&posting.account)
             && posting.amount.is_some()
-            && posting.amount.as_ref().unwrap().commodity.name != main_commodity
+            && posting.amount.as_ref().unwrap().amount.commodity.name != main_commodity
         {
             let foreign_amount = posting.amount.as_ref().unwrap().clone();
 
             // convert amount to main commodity
             let mut amount_main_commodity = prices.convert(
-                posting.amount.as_ref().unwrap().quantity,
-                &posting.amount.as_ref().unwrap().commodity.name,
+                posting.amount.as_ref().unwrap().amount.quantity,
+                &posting.amount.as_ref().unwrap().amount.commodity.name,
                 main_commodity,
                 transaction.date,
             )?;
@@ -87,7 +88,11 @@ where
                     position: CommodityPosition::Right,
                 },
             };
-            posting.amount = Some(main_currency_amount.clone());
+            posting.amount = Some(PostingAmount {
+                amount: main_currency_amount.clone(),
+                lot_price: None,
+                price: None,
+            });
 
             // add postings to trading account that will track currency gains and losses
             main_currency_amount.quantity = -main_currency_amount.quantity;
@@ -96,7 +101,11 @@ where
                 account: "Trading:Exchange".to_string(),
                 reality: Reality::Real,
                 status: None,
-                amount: Some(main_currency_amount),
+                amount: Some(PostingAmount {
+                    amount: main_currency_amount,
+                    lot_price: None,
+                    price: None,
+                }),
                 balance: None,
             });
             new_postings.push(Posting {
@@ -143,12 +152,14 @@ where
         .amount
         .as_ref()
         .unwrap()
+        .amount
         .commodity
         .name;
     let commodity2_name = &transaction.postings[1]
         .amount
         .as_ref()
         .unwrap()
+        .amount
         .commodity
         .name;
     if commodity1_name == commodity2_name {
@@ -156,8 +167,18 @@ where
     }
 
     // add postings to trading account that will track currency gains and losses
-    let mut amount1 = transaction.postings[0].amount.as_ref().unwrap().clone();
-    let mut amount2 = transaction.postings[1].amount.as_ref().unwrap().clone();
+    let mut amount1 = transaction.postings[0]
+        .amount
+        .as_ref()
+        .unwrap()
+        .amount
+        .clone();
+    let mut amount2 = transaction.postings[1]
+        .amount
+        .as_ref()
+        .unwrap()
+        .amount
+        .clone();
 
     amount1.quantity = -amount1.quantity;
     amount2.quantity = -amount2.quantity;
@@ -167,7 +188,11 @@ where
         account: "Trading:Exchange".to_string(),
         reality: Reality::Real,
         status: None,
-        amount: Some(amount1),
+        amount: Some(PostingAmount {
+            amount: amount1,
+            lot_price: None,
+            price: None,
+        }),
         balance: None,
     });
     transaction.postings.push(Posting {
@@ -175,7 +200,11 @@ where
         account: "Trading:Exchange".to_string(),
         reality: Reality::Real,
         status: None,
-        amount: Some(amount2),
+        amount: Some(PostingAmount {
+            amount: amount2,
+            lot_price: None,
+            price: None,
+        }),
         balance: None,
     });
 }
@@ -200,14 +229,14 @@ where
     for posting in transaction.postings.iter_mut() {
         if is_expense_account(&posting.account)
             && posting.amount.is_some()
-            && posting.amount.as_ref().unwrap().commodity.name != main_commodity
+            && posting.amount.as_ref().unwrap().amount.commodity.name != main_commodity
         {
             let foreign_amount = posting.amount.as_ref().unwrap().clone();
 
             // convert amount to main commodity
             let mut amount_main_commodity = prices.convert(
-                posting.amount.as_ref().unwrap().quantity,
-                &posting.amount.as_ref().unwrap().commodity.name,
+                posting.amount.as_ref().unwrap().amount.quantity,
+                &posting.amount.as_ref().unwrap().amount.commodity.name,
                 main_commodity,
                 transaction.date,
             )?;
@@ -224,7 +253,14 @@ where
                     position: CommodityPosition::Right,
                 },
             };
-            posting.amount = Some(main_currency_amount.clone());
+            posting.amount = Some(
+                PostingAmount {
+                    amount: main_currency_amount.clone(),
+                    lot_price: None,
+                    price: None,
+                }
+                .clone(),
+            );
 
             // add postings to trading account that will track currency gains and losses
             main_currency_amount.quantity = -main_currency_amount.quantity;
@@ -233,7 +269,11 @@ where
                 account: "Trading:Exchange".to_string(),
                 reality: Reality::Real,
                 status: None,
-                amount: Some(main_currency_amount),
+                amount: Some(PostingAmount {
+                    amount: main_currency_amount,
+                    lot_price: None,
+                    price: None,
+                }),
                 balance: None,
             });
             new_postings.push(Posting {

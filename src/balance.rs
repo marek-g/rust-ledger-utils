@@ -35,9 +35,9 @@ impl Balance {
             // TODO: handle empty amounts & balance verifications
             account_balance
                 .amounts
-                .entry(posting.amount.clone().unwrap().commodity.name)
-                .and_modify(|a| a.quantity += posting.amount.clone().unwrap().quantity)
-                .or_insert_with(|| posting.amount.clone().unwrap());
+                .entry(posting.amount.clone().unwrap().amount.commodity.name)
+                .and_modify(|a| a.quantity += posting.amount.clone().unwrap().amount.quantity)
+                .or_insert_with(|| posting.amount.clone().unwrap().amount);
         }
     }
 

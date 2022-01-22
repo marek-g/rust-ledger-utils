@@ -122,12 +122,16 @@ mod tests {
                             Posting {
                                 account: "TEST:ABC 123".to_string(),
                                 reality: Reality::Real,
-                                amount: Some(Amount {
-                                    quantity: Decimal::new(120, 2),
-                                    commodity: Commodity {
-                                        name: "$".to_string(),
-                                        position: CommodityPosition::Left
-                                    }
+                                amount: Some(PostingAmount {
+                                    amount: Amount {
+                                        quantity: Decimal::new(120, 2),
+                                        commodity: Commodity {
+                                            name: "$".to_string(),
+                                            position: CommodityPosition::Left
+                                        }
+                                    },
+                                    lot_price: None,
+                                    price: None
                                 }),
                                 balance: None,
                                 status: None,
@@ -136,12 +140,16 @@ mod tests {
                             Posting {
                                 account: "TEST:ABC 123".to_string(),
                                 reality: Reality::Real,
-                                amount: Some(Amount {
-                                    quantity: Decimal::new(120, 2),
-                                    commodity: Commodity {
-                                        name: "$".to_string(),
-                                        position: CommodityPosition::Left
-                                    }
+                                amount: Some(PostingAmount {
+                                    amount: Amount {
+                                        quantity: Decimal::new(120, 2),
+                                        commodity: Commodity {
+                                            name: "$".to_string(),
+                                            position: CommodityPosition::Left
+                                        }
+                                    },
+                                    lot_price: None,
+                                    price: None
                                 }),
                                 balance: None,
                                 status: None,
@@ -160,12 +168,16 @@ mod tests {
                             Posting {
                                 account: "TEST:ABC 123".to_string(),
                                 reality: Reality::Real,
-                                amount: Some(Amount {
-                                    quantity: Decimal::new(120, 2),
-                                    commodity: Commodity {
-                                        name: "$".to_string(),
-                                        position: CommodityPosition::Left
-                                    }
+                                amount: Some(PostingAmount {
+                                    amount: Amount {
+                                        quantity: Decimal::new(120, 2),
+                                        commodity: Commodity {
+                                            name: "$".to_string(),
+                                            position: CommodityPosition::Left
+                                        }
+                                    },
+                                    lot_price: None,
+                                    price: None
                                 }),
                                 balance: None,
                                 status: None,
@@ -174,12 +186,16 @@ mod tests {
                             Posting {
                                 account: "TEST:ABC 123".to_string(),
                                 reality: Reality::Real,
-                                amount: Some(Amount {
-                                    quantity: Decimal::new(120, 2),
-                                    commodity: Commodity {
-                                        name: "$".to_string(),
-                                        position: CommodityPosition::Left
-                                    }
+                                amount: Some(PostingAmount {
+                                    amount: Amount {
+                                        quantity: Decimal::new(120, 2),
+                                        commodity: Commodity {
+                                            name: "$".to_string(),
+                                            position: CommodityPosition::Left
+                                        }
+                                    },
+                                    lot_price: None,
+                                    price: None
                                 }),
                                 balance: None,
                                 status: None,
