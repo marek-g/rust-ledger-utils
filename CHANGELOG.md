@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- Calculate omitted amounts (thanks to Tim Bates)
+
 ## [0.2.0] - 2021-01-22
 
 ### Changed

@@ -55,6 +55,14 @@ impl Balance {
         balance
     }
 
+    pub fn add_amount(&mut self, account: &str, amount: &ledger_parser::Amount) {
+        let account_balance = self
+            .account_balances
+            .entry(account.to_owned())
+            .or_insert_with(AccountBalance::new);
+        *account_balance += amount;
+    }
+
     fn remove_empties(&mut self) {
         let empties: Vec<String> = self
             .account_balances

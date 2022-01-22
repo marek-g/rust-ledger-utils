@@ -66,12 +66,17 @@ impl AccountBalance {
         }
     }
 
+    pub fn is_zero(&self) -> bool {
+        self.amounts
+            .iter()
+            .all(|(_, amount)| amount.quantity == Decimal::ZERO)
+    }
+
     fn remove_empties(&mut self) {
-        let zero = Decimal::new(0, 0);
         let empties: Vec<String> = self
             .amounts
             .iter()
-            .filter(|&(_, amount)| amount.quantity == zero)
+            .filter(|(_, amount)| amount.quantity == Decimal::ZERO)
             .map(|(k, _)| k.clone())
             .collect();
         for empty in empties {
@@ -92,6 +97,16 @@ impl<'a> AddAssign<&'a AccountBalance> for AccountBalance {
     }
 }
 
+impl<'a> AddAssign<&'a ledger_parser::Amount> for AccountBalance {
+    fn add_assign(&mut self, amount: &'a ledger_parser::Amount) {
+        self.amounts
+            .entry(amount.commodity.name.clone())
+            .and_modify(|a| a.quantity += amount.quantity)
+            .or_insert_with(|| amount.clone());
+        self.remove_empties();
+    }
+}
+
 impl<'a> SubAssign<&'a AccountBalance> for AccountBalance {
     fn sub_assign(&mut self, other: &'a AccountBalance) {
         for (currrency_name, amount) in &other.amounts {
@@ -100,6 +115,16 @@ impl<'a> SubAssign<&'a AccountBalance> for AccountBalance {
                 .and_modify(|a| a.quantity -= amount.quantity)
                 .or_insert_with(|| amount.clone());
         }
+        self.remove_empties();
+    }
+}
+
+impl<'a> SubAssign<&'a ledger_parser::Amount> for AccountBalance {
+    fn sub_assign(&mut self, amount: &'a ledger_parser::Amount) {
+        self.amounts
+            .entry(amount.commodity.name.clone())
+            .and_modify(|a| a.quantity -= amount.quantity)
+            .or_insert_with(|| amount.clone());
         self.remove_empties();
     }
 }
