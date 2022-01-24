@@ -1,6 +1,6 @@
 use crate::balance::Balance;
+use crate::Ledger;
 use chrono::Datelike;
-use ledger_parser::{Ledger, LedgerItem};
 
 #[derive(Debug, Clone)]
 pub struct MonthlyBalance {
@@ -46,36 +46,33 @@ impl<'a> From<&'a Ledger> for MonthlyReport {
 
         let mut current_year = 0;
         let mut current_month = 0;
-        let mut current_montly_balance: Option<MonthlyBalance> = None;
+        let mut current_monthly_balance: Option<MonthlyBalance> = None;
         let mut monthly_balance = Balance::new();
         let mut total_balance = Balance::new();
 
-        for item in &ledger.items {
-            if let LedgerItem::Transaction(transaction) = item {
-                if transaction.date.year() != current_year
-                    || transaction.date.month() != current_month
-                {
-                    // begin new month
+        for transaction in &ledger.transactions {
+            if transaction.date.year() != current_year || transaction.date.month() != current_month
+            {
+                // begin new month
 
-                    if let Some(mut b) = current_montly_balance.take() {
-                        b.monthly_change = monthly_balance.clone();
-                        b.total = total_balance.clone();
-                        report.monthly_balances.push(b);
-                    }
-
-                    current_year = transaction.date.year();
-                    current_month = transaction.date.month();
-                    monthly_balance = Balance::new();
-
-                    current_montly_balance = Some(MonthlyBalance::new(current_year, current_month));
+                if let Some(mut b) = current_monthly_balance.take() {
+                    b.monthly_change = monthly_balance.clone();
+                    b.total = total_balance.clone();
+                    report.monthly_balances.push(b);
                 }
 
-                monthly_balance.update_with_transaction(transaction);
-                total_balance.update_with_transaction(transaction);
+                current_year = transaction.date.year();
+                current_month = transaction.date.month();
+                monthly_balance = Balance::new();
+
+                current_monthly_balance = Some(MonthlyBalance::new(current_year, current_month));
             }
+
+            monthly_balance.update_with_transaction(transaction);
+            total_balance.update_with_transaction(transaction);
         }
 
-        if let Some(mut b) = current_montly_balance.take() {
+        if let Some(mut b) = current_monthly_balance.take() {
             b.monthly_change = monthly_balance.clone();
             b.total = total_balance.clone();
             report.monthly_balances.push(b);

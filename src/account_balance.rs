@@ -1,6 +1,6 @@
 use crate::prices::{Prices, PricesError};
+use crate::Amount;
 use chrono::NaiveDate;
-use ledger_parser::*;
 use rust_decimal::Decimal;
 use rust_decimal::RoundingStrategy;
 use std::collections::HashMap;
@@ -97,8 +97,8 @@ impl<'a> AddAssign<&'a AccountBalance> for AccountBalance {
     }
 }
 
-impl<'a> AddAssign<&'a ledger_parser::Amount> for AccountBalance {
-    fn add_assign(&mut self, amount: &'a ledger_parser::Amount) {
+impl<'a> AddAssign<&'a Amount> for AccountBalance {
+    fn add_assign(&mut self, amount: &'a Amount) {
         self.amounts
             .entry(amount.commodity.name.clone())
             .and_modify(|a| a.quantity += amount.quantity)
@@ -119,8 +119,8 @@ impl<'a> SubAssign<&'a AccountBalance> for AccountBalance {
     }
 }
 
-impl<'a> SubAssign<&'a ledger_parser::Amount> for AccountBalance {
-    fn sub_assign(&mut self, amount: &'a ledger_parser::Amount) {
+impl<'a> SubAssign<&'a Amount> for AccountBalance {
+    fn sub_assign(&mut self, amount: &'a Amount) {
         self.amounts
             .entry(amount.commodity.name.clone())
             .and_modify(|a| a.quantity -= amount.quantity)
