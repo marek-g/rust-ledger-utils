@@ -85,6 +85,26 @@ impl AccountBalance {
     }
 }
 
+impl fmt::Display for AccountBalance {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if self.amounts.is_empty() {
+            write!(f, "0")?;
+            return Ok(());
+        }
+
+        let mut amounts: Vec<_> = self.amounts.values().collect();
+        amounts.sort_by_key(|a| &a.commodity.name);
+
+        write!(f, "{}", amounts[0])?;
+
+        for amount in amounts[1..].iter() {
+            write!(f, ", {}", amount)?;
+        }
+
+        Ok(())
+    }
+}
+
 impl<'a> AddAssign<&'a AccountBalance> for AccountBalance {
     fn add_assign(&mut self, other: &'a AccountBalance) {
         for (currrency_name, amount) in &other.amounts {
