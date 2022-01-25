@@ -4,6 +4,7 @@ use crate::simplified_ledger::SimplificationError;
 use ledger_parser::{
     Amount, Commodity, CommodityPosition, Posting, PostingAmount, Reality, Transaction,
 };
+use ledger_parser::{Balance::Amount as BalanceAmount, Balance::Zero as BalanceZero};
 use rust_decimal::Decimal;
 
 /// Fails if any transactions are unbalanced, any balance assertions fail, or if an unbalanced
@@ -135,7 +136,7 @@ fn calculate_posting_amounts_from_balances(
         let account_balance = running_balance.account_balances.get(&posting.account);
 
         let (commodity, balance_target, current_balance) = match posting_balance {
-            ledger_parser::Balance::Amount(balance_amount) => {
+            BalanceAmount(balance_amount) => {
                 // Balance given, find account balance with matching commodity.
                 match account_balance.and_then(|b| b.amounts.get(&balance_amount.commodity.name)) {
                     Some(current_balance) => {
@@ -156,7 +157,7 @@ fn calculate_posting_amounts_from_balances(
                     }
                 }
             }
-            ledger_parser::Balance::Zero => match account_balance.map_or(0, |b| b.amounts.len()) {
+            BalanceZero => match account_balance.map_or(0, |b| b.amounts.len()) {
                 0 => {
                     // Zero balance given and account is empty (no commodities). Discard this
                     // posting by using an empty commodity which we will filter out later.
@@ -198,7 +199,7 @@ fn calculate_posting_amounts_from_balances(
         if posting.amount.is_some() {
             // Posting has an amount. It will already have been included in current_balance
             // so just check that the posting balance is equal to that.
-            if let ledger_parser::Balance::Amount(posting_balance) = posting_balance {
+            if let BalanceAmount(posting_balance) = posting_balance {
                 if posting_balance.quantity != current_balance {
                     return Err(SimplificationError::BalanceAssertionFailed(
                         transaction.clone(),
@@ -292,6 +293,7 @@ fn calculate_omitted_amounts_for_posting(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ledger_parser::LedgerItem;
 
     fn parse_transaction(input: &str) -> Transaction {
         ledger_parser::parse(input)
@@ -299,7 +301,7 @@ mod tests {
             .items
             .into_iter()
             .find_map(|item| match item {
-                ledger_parser::LedgerItem::Transaction(txn) => Some(txn),
+                LedgerItem::Transaction(txn) => Some(txn),
                 _ => None,
             })
             .unwrap()
@@ -311,7 +313,7 @@ mod tests {
             .items
             .into_iter()
             .filter_map(|item| match item {
-                ledger_parser::LedgerItem::Transaction(txn) => Some(txn),
+                LedgerItem::Transaction(txn) => Some(txn),
                 _ => None,
             })
             .collect()

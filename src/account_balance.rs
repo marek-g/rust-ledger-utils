@@ -1,6 +1,6 @@
 use crate::prices::{Prices, PricesError};
+use crate::Amount;
 use chrono::NaiveDate;
-use ledger_parser::*;
 use rust_decimal::Decimal;
 use rust_decimal::RoundingStrategy;
 use std::collections::HashMap;
@@ -85,6 +85,26 @@ impl AccountBalance {
     }
 }
 
+impl fmt::Display for AccountBalance {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if self.amounts.is_empty() {
+            write!(f, "0")?;
+            return Ok(());
+        }
+
+        let mut amounts: Vec<_> = self.amounts.values().collect();
+        amounts.sort_by_key(|a| &a.commodity.name);
+
+        write!(f, "{}", amounts[0])?;
+
+        for amount in amounts[1..].iter() {
+            write!(f, ", {}", amount)?;
+        }
+
+        Ok(())
+    }
+}
+
 impl<'a> AddAssign<&'a AccountBalance> for AccountBalance {
     fn add_assign(&mut self, other: &'a AccountBalance) {
         for (currrency_name, amount) in &other.amounts {
@@ -97,8 +117,8 @@ impl<'a> AddAssign<&'a AccountBalance> for AccountBalance {
     }
 }
 
-impl<'a> AddAssign<&'a ledger_parser::Amount> for AccountBalance {
-    fn add_assign(&mut self, amount: &'a ledger_parser::Amount) {
+impl<'a> AddAssign<&'a Amount> for AccountBalance {
+    fn add_assign(&mut self, amount: &'a Amount) {
         self.amounts
             .entry(amount.commodity.name.clone())
             .and_modify(|a| a.quantity += amount.quantity)
@@ -119,8 +139,8 @@ impl<'a> SubAssign<&'a AccountBalance> for AccountBalance {
     }
 }
 
-impl<'a> SubAssign<&'a ledger_parser::Amount> for AccountBalance {
-    fn sub_assign(&mut self, amount: &'a ledger_parser::Amount) {
+impl<'a> SubAssign<&'a Amount> for AccountBalance {
+    fn sub_assign(&mut self, amount: &'a Amount) {
         self.amounts
             .entry(amount.commodity.name.clone())
             .and_modify(|a| a.quantity -= amount.quantity)

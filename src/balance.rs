@@ -1,5 +1,5 @@
 use crate::account_balance::AccountBalance;
-use ledger_parser::*;
+use crate::{Amount, Ledger, Transaction};
 use std::collections::HashMap;
 use std::ops::AddAssign;
 use std::ops::SubAssign;
@@ -32,12 +32,11 @@ impl Balance {
                 .entry(posting.account.clone())
                 .or_insert_with(AccountBalance::new);
 
-            // TODO: handle empty amounts & balance verifications
             account_balance
                 .amounts
-                .entry(posting.amount.clone().unwrap().amount.commodity.name)
-                .and_modify(|a| a.quantity += posting.amount.clone().unwrap().amount.quantity)
-                .or_insert_with(|| posting.amount.clone().unwrap().amount);
+                .entry(posting.amount.commodity.name.clone())
+                .and_modify(|a| a.quantity += posting.amount.quantity)
+                .or_insert_with(|| posting.amount.clone());
         }
     }
 
@@ -55,7 +54,7 @@ impl Balance {
         balance
     }
 
-    pub fn add_amount(&mut self, account: &str, amount: &ledger_parser::Amount) {
+    pub fn add_amount(&mut self, account: &str, amount: &Amount) {
         let account_balance = self
             .account_balances
             .entry(account.to_owned())
@@ -80,10 +79,8 @@ impl<'a> From<&'a Ledger> for Balance {
     fn from(ledger: &'a Ledger) -> Self {
         let mut balance = Balance::new();
 
-        for item in &ledger.items {
-            if let LedgerItem::Transaction(transaction) = item {
-                balance.update_with_transaction(transaction);
-            }
+        for transaction in &ledger.transactions {
+            balance.update_with_transaction(transaction);
         }
 
         balance
