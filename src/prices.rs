@@ -55,16 +55,22 @@ pub struct Prices {
     pub rates: HashMap<CommoditiesPair, RatesTable>,
 }
 
+impl Default for Prices {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Prices {
-    pub fn load(ledger: &Ledger) -> Prices {
-        let mut result = Prices {
+    pub fn new() -> Self {
+        Self {
             rates: HashMap::new(),
-        };
+        }
+    }
 
-        result.add_prices(&get_commodity_prices(ledger));
-        result.add_prices(&get_prices_from_transactions(ledger));
-
-        result
+    pub fn insert_from(&mut self, ledger: &Ledger) {
+        self.add_prices(&get_commodity_prices(ledger));
+        self.add_prices(&get_prices_from_transactions(ledger));
     }
 
     pub fn convert(
