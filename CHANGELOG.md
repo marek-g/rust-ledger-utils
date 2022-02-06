@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.4.0] - 2022-02-06
+
+### Changed
+
+- Prices API change - allow initializing with multiple ledgers
+
 ## [0.3.0] - 2022-01-25
 
 ### Added

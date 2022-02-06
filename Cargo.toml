@@ -1,6 +1,6 @@
 [package]
 name = "ledger-utils"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Marek Gibek <marek-dev@yandex.com>"]
 description = "Ledger-cli (https://www.ledger-cli.org/) file processing Rust library, useful for calculating balances, creating reports etc."
 license = "Unlicense"
