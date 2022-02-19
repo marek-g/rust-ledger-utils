@@ -116,44 +116,23 @@ fn calculate_transaction_amounts(
         }
     }
 
-    // Check that all real postings now balance.
-    if !real_transaction_balance.is_zero() {
-        // Handle the case where there are exactly two commodities that are non-zero, by
-        // creating a commodity price for this date that makes the transaction balance.
-        let real_postings: Vec<_> = new_postings
-            .iter()
-            .filter(|posting| posting.reality == Reality::Real)
-            .collect();
-
-        if let Some(commodity_price) =
-            get_commodity_price_from_postings(transaction.date, &real_postings)
-        {
-            commodity_prices.push(commodity_price);
-        } else {
-            return Err(SimplificationError::UnbalancedTransaction(
-                transaction.clone(),
-            ));
-        }
-    }
-
-    // Check that all balanced virtual postings now balance.
-    if !virtual_transaction_balance.is_zero() {
-        // Handle the case where there are exactly two commodities that are non-zero, by
-        // creating a commodity price for this date that makes the transaction balance.
-        let virtual_balanced_postings: Vec<_> = new_postings
-            .iter()
-            .filter(|posting| posting.reality == Reality::BalancedVirtual)
-            .collect();
-
-        if let Some(commodity_price) =
-            get_commodity_price_from_postings(transaction.date, &virtual_balanced_postings)
-        {
-            commodity_prices.push(commodity_price);
-        } else {
-            return Err(SimplificationError::UnbalancedTransaction(
-                transaction.clone(),
-            ));
-        }
+    // Check that all real and virtual postings now balance.
+    if !real_transaction_balance.is_zero()
+        && !handle_commodity_exchange(
+            transaction.date,
+            &real_transaction_balance,
+            commodity_prices,
+        )
+        || !virtual_transaction_balance.is_zero()
+            && !handle_commodity_exchange(
+                transaction.date,
+                &virtual_transaction_balance,
+                commodity_prices,
+            )
+    {
+        return Err(SimplificationError::UnbalancedTransaction(
+            transaction.clone(),
+        ));
     }
 
     transaction.postings = new_postings;
@@ -161,28 +140,40 @@ fn calculate_transaction_amounts(
     Ok(())
 }
 
-fn get_commodity_price_from_postings(
+// Handle the case where there are exactly two commodities that are non-zero, by
+// creating a commodity price for this date that makes the transaction balance.
+fn handle_commodity_exchange(
     transaction_date: NaiveDate,
-    postings: &[&Posting],
-) -> Option<CommodityPrice> {
-    if postings.len() == 2
-        && postings[0].amount.clone().unwrap().amount.commodity.name
-            != postings[1].amount.clone().unwrap().amount.commodity.name
-        && postings[0].amount.clone().unwrap().amount.quantity != Decimal::new(0, 0)
-        && postings[1].amount.clone().unwrap().amount.quantity != Decimal::new(0, 0)
-    {
-        Some(CommodityPrice {
-            datetime: transaction_date.and_hms(0, 0, 0),
-            commodity_name: (postings[0]).amount.clone().unwrap().amount.commodity.name,
-            amount: Amount {
-                quantity: -postings[1].amount.clone().unwrap().amount.quantity
-                    / postings[0].amount.clone().unwrap().amount.quantity,
-                commodity: (postings[1]).amount.clone().unwrap().amount.commodity,
-            },
-        })
+    balance: &AccountBalance,
+    commodity_prices: &mut Vec<CommodityPrice>,
+) -> bool {
+    if let Some(commodity_price) = get_commodity_price_from_balance(transaction_date, balance) {
+        commodity_prices.push(commodity_price);
+        true
     } else {
-        None
+        false
     }
+}
+
+fn get_commodity_price_from_balance(
+    transaction_date: NaiveDate,
+    balance: &AccountBalance,
+) -> Option<CommodityPrice> {
+    if balance.amounts.len() == 2 {
+        let amounts: Vec<_> = balance.amounts.iter().map(|f| f.1).collect();
+
+        if amounts[0].quantity != Decimal::new(0, 0) && amounts[1].quantity != Decimal::new(0, 0) {
+            return Some(CommodityPrice {
+                datetime: transaction_date.and_hms(0, 0, 0),
+                commodity_name: amounts[0].commodity.name.clone(),
+                amount: Amount {
+                    quantity: -amounts[1].quantity / amounts[0].quantity,
+                    commodity: amounts[1].commodity.clone(),
+                },
+            });
+        }
+    }
+    None
 }
 
 fn calculate_posting_amounts_from_balances(
