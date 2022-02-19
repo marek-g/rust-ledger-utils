@@ -1,10 +1,10 @@
 # Changelog
 
-## [Unreleased]
+## [0.4.1] - 2022-02-19
 
 ### Added
 
-- Handle currency exchanges
+- Simplified ledger - handle currency exchanges
 
 ## [0.4.0] - 2022-02-06
 
