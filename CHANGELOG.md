@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- Handle currency exchanges
+
 ## [0.4.0] - 2022-02-06
 
 ### Changed

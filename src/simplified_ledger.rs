@@ -136,7 +136,10 @@ impl TryFrom<ledger_parser::Ledger> for Ledger {
             }
         }
 
-        calculate_amounts::calculate_amounts_from_balances(&mut transactions)?;
+        calculate_amounts::calculate_amounts_from_balances(
+            &mut transactions,
+            &mut commodity_prices,
+        )?;
 
         Ok(Ledger {
             transactions: transactions
@@ -313,6 +316,36 @@ mod tests {
     use chrono::NaiveDate;
     use ledger_parser::{Amount, Commodity, CommodityPosition, CommodityPrice, Reality};
     use rust_decimal::Decimal;
+
+    #[test]
+    fn test_handle_commodity_exchange() {
+        let ledger = ledger_parser::parse(
+            r#"
+2022-02-19 Exchange
+  DollarAccount   $1.00
+  PLNAccount  -4.00 PLN
+"#,
+        )
+        .unwrap();
+        let simplified_ledger: Result<Ledger, _> = ledger.try_into();
+        assert!(simplified_ledger.is_ok());
+        assert_eq!(simplified_ledger.unwrap().commodity_prices.len(), 1);
+    }
+
+    #[test]
+    fn test_handle_commodity_exchange2() {
+        let ledger = ledger_parser::parse(
+            r#"
+2020-02-01 Buy ADA
+  assets:cc:ada          2000 ADA @ $0.02
+  assets:bank:checking                   $-40
+"#,
+        )
+        .unwrap();
+        let simplified_ledger: Result<Ledger, _> = ledger.try_into();
+        assert!(simplified_ledger.is_ok());
+        assert_eq!(simplified_ledger.unwrap().commodity_prices.len(), 1);
+    }
 
     #[test]
     fn display_ledger() {
