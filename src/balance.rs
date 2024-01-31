@@ -38,6 +38,7 @@ impl Balance {
                 .and_modify(|a| a.quantity += posting.amount.quantity)
                 .or_insert_with(|| posting.amount.clone());
         }
+        self.remove_empties();
     }
 
     pub fn get_account_balance(&self, account_prefixes: &[&str]) -> AccountBalance {
@@ -66,7 +67,7 @@ impl Balance {
         let empties: Vec<String> = self
             .account_balances
             .iter()
-            .filter(|&(_, account_balance)| account_balance.amounts.is_empty())
+            .filter(|&(_, account_balance)| account_balance.is_zero())
             .map(|(k, _)| k.clone())
             .collect();
         for empty in empties {

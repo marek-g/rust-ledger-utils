@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unreleased]
+
+- Remove zero-balance accounts from Balance when adding transactions
+
 ## [0.5.0] - 2024-03-05
 
 - Update ledger-parser to 6
