@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Rename SimplificationError to Error and wrap ledger_parser::ParseError into it
 - Remove zero-balance accounts from Balance when adding transactions
 
 ## [0.5.0] - 2024-03-05

@@ -52,7 +52,8 @@ impl Serializer for Ledger {
 
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum SimplificationError {
+pub enum Error {
+    ParseError(ledger_parser::ParseError),
     IncompleteTransaction(ledger_parser::Posting),
     UnbalancedTransaction(ledger_parser::Transaction),
     BalanceAssertionFailed(ledger_parser::Transaction),
@@ -61,35 +62,44 @@ pub enum SimplificationError {
     ZeroBalanceMultipleCurrencies(ledger_parser::Transaction),
 }
 
-impl std::error::Error for SimplificationError {}
+impl std::error::Error for Error {}
 
-impl fmt::Display for SimplificationError {
+impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            SimplificationError::IncompleteTransaction(p) => {
+            Error::ParseError(p) => {
+                write!(f, "Parse error:\n{}", p)
+            }
+            Error::IncompleteTransaction(p) => {
                 write!(f, "Incomplete transaction:\n{}", p)
             }
-            SimplificationError::UnbalancedTransaction(t) => {
+            Error::UnbalancedTransaction(t) => {
                 write!(f, "Unbalanced transaction:\n{}", t)
             }
-            SimplificationError::BalanceAssertionFailed(t) => {
+            Error::BalanceAssertionFailed(t) => {
                 write!(f, "Balance assertion failed:\n{}", t)
             }
-            SimplificationError::ZeroBalanceAssertionFailed(t) => {
+            Error::ZeroBalanceAssertionFailed(t) => {
                 write!(f, "Zero balance assertion failed:\n{}", t)
             }
-            SimplificationError::UnbalancedVirtualWithNoAmount(t) => {
+            Error::UnbalancedVirtualWithNoAmount(t) => {
                 write!(f, "Unbalanced virtual posting with no amount:\n{}", t)
             }
-            SimplificationError::ZeroBalanceMultipleCurrencies(t) => {
+            Error::ZeroBalanceMultipleCurrencies(t) => {
                 write!(f, "Zero balance with multiple currencies:\n{}", t)
             }
         }
     }
 }
 
+impl From<ledger_parser::ParseError> for Error {
+    fn from(e: ledger_parser::ParseError) -> Self {
+        Error::ParseError(e)
+    }
+}
+
 impl TryFrom<ledger_parser::Ledger> for Ledger {
-    type Error = SimplificationError;
+    type Error = Error;
 
     /// Fails if any transactions are unbalanced, any balance assertions fail, or if an unbalanced
     /// virtual posting (account name in `()`) has no amount.
@@ -163,7 +173,7 @@ pub struct Transaction {
 }
 
 impl TryFrom<ledger_parser::Transaction> for Transaction {
-    type Error = SimplificationError;
+    type Error = Error;
 
     /// Fails if any transactions are unbalanced, or if an unbalanced virtual posting
     /// (account name in `()`) has no amount.
@@ -252,7 +262,7 @@ pub struct Posting {
 }
 
 impl TryFrom<ledger_parser::Posting> for Posting {
-    type Error = SimplificationError;
+    type Error = Error;
 
     /// Fails unless all `amount`s are `Some`. Ignores `balance`s.
     fn try_from(value: ledger_parser::Posting) -> Result<Self, Self::Error> {
@@ -265,7 +275,7 @@ impl TryFrom<ledger_parser::Posting> for Posting {
                 amount,
             })
         } else {
-            Err(SimplificationError::IncompleteTransaction(value))
+            Err(Error::IncompleteTransaction(value))
         }
     }
 }
