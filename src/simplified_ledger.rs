@@ -1,6 +1,7 @@
 use crate::*;
 use chrono::NaiveDate;
 use ledger_parser::{LedgerItem, Serializer, SerializerSettings, Tag, TagValue};
+use std::str::FromStr;
 use std::{fmt, io};
 
 ///
@@ -95,6 +96,14 @@ impl fmt::Display for Error {
 impl From<ledger_parser::ParseError> for Error {
     fn from(e: ledger_parser::ParseError) -> Self {
         Error::ParseError(e)
+    }
+}
+
+impl FromStr for Ledger {
+    type Err = Error;
+
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        input.parse::<ledger_parser::Ledger>()?.try_into()
     }
 }
 

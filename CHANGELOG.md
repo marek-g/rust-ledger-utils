@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Add FromStr impl for simplified_ledger::Ledger
 - Apply parsed Transaction metadata to Postings in simplified_ledger::Ledger
 - Rename SimplificationError to Error and wrap ledger_parser::ParseError into it
 - Remove zero-balance accounts from Balance when adding transactions
