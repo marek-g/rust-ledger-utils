@@ -321,6 +321,11 @@ fn calculate_omitted_amounts_for_posting(
                 reality: posting.reality,
                 status: posting.status,
                 comment: posting.comment.clone(),
+                metadata: PostingMetadata {
+                    date: None,
+                    effective_date: None,
+                    tags: vec![],
+                },
                 amount: Some(PostingAmount {
                     amount,
                     lot_price: None,
@@ -345,10 +350,11 @@ fn calculate_omitted_amounts_for_posting(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ledger_parser::LedgerItem;
+    use ledger_parser::{Ledger, LedgerItem};
 
     fn parse_transaction(input: &str) -> Transaction {
-        ledger_parser::parse(input)
+        input
+            .parse::<Ledger>()
             .unwrap()
             .items
             .into_iter()
@@ -360,7 +366,8 @@ mod tests {
     }
 
     fn parse_transactions(input: &str) -> Vec<Transaction> {
-        ledger_parser::parse(input)
+        input
+            .parse::<Ledger>()
             .unwrap()
             .items
             .into_iter()

@@ -1,6 +1,6 @@
 use crate::*;
 use chrono::NaiveDate;
-use ledger_parser::{LedgerItem, Serializer, SerializerSettings};
+use ledger_parser::{LedgerItem, Serializer, SerializerSettings, Tag, TagValue};
 use std::{fmt, io};
 
 ///
@@ -192,7 +192,12 @@ impl TryFrom<ledger_parser::Transaction> for Transaction {
             postings: transaction
                 .postings
                 .into_iter()
-                .map(Posting::try_from)
+                .map(OptionalDatePosting::try_from)
+                .map(|res| {
+                    res.map(|posting| {
+                        posting.fill_dates(transaction.date, transaction.effective_date)
+                    })
+                })
                 .collect::<Result<_, _>>()?,
         })
     }
@@ -230,7 +235,7 @@ impl Serializer for Transaction {
 
         for posting in &self.postings {
             write!(writer, "{}{}", settings.eol, settings.indent)?;
-            posting.write(writer, settings)?;
+            posting.elide_dates(self).write(writer, settings)?;
         }
 
         Ok(())
@@ -249,26 +254,90 @@ impl fmt::Display for Transaction {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub struct Posting {
+pub struct OptionalDatePosting {
+    pub date: Option<NaiveDate>,
+    pub effective_date: Option<NaiveDate>,
     pub account: String,
     pub reality: Reality,
     pub amount: Amount,
     pub status: Option<TransactionStatus>,
     pub comment: Option<String>,
+    pub tags: Vec<Tag>,
 }
 
-impl TryFrom<ledger_parser::Posting> for Posting {
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub struct Posting {
+    pub date: NaiveDate,
+    pub effective_date: NaiveDate,
+    pub account: String,
+    pub reality: Reality,
+    pub amount: Amount,
+    pub status: Option<TransactionStatus>,
+    pub comment: Option<String>,
+    pub tags: Vec<Tag>,
+}
+
+impl OptionalDatePosting {
+    pub fn fill_dates(self, txn_date: NaiveDate, txn_effective_date: Option<NaiveDate>) -> Posting {
+        Posting {
+            date: self.date.unwrap_or(txn_date),
+            effective_date: self
+                .effective_date
+                .or(self.date)
+                .or(txn_effective_date)
+                .unwrap_or(txn_date),
+            account: self.account,
+            reality: self.reality,
+            amount: self.amount,
+            status: self.status,
+            comment: self.comment,
+            tags: self.tags,
+        }
+    }
+}
+
+impl Posting {
+    pub fn elide_dates(&self, txn: &Transaction) -> OptionalDatePosting {
+        let date = if self.date != txn.date {
+            Some(self.date)
+        } else {
+            None
+        };
+
+        let effective_date = if self.effective_date != date.unwrap_or(txn.effective_date) {
+            Some(self.effective_date)
+        } else {
+            None
+        };
+
+        OptionalDatePosting {
+            date,
+            effective_date,
+            account: self.account.clone(),
+            reality: self.reality,
+            amount: self.amount.clone(),
+            status: self.status,
+            comment: self.comment.clone(),
+            tags: self.tags.clone(),
+        }
+    }
+}
+
+impl TryFrom<ledger_parser::Posting> for OptionalDatePosting {
     type Error = Error;
 
     /// Fails unless all `amount`s are `Some`. Ignores `balance`s.
     fn try_from(posting: ledger_parser::Posting) -> Result<Self, Self::Error> {
         if let Some(ledger_parser::PostingAmount { amount, .. }) = posting.amount {
             Ok(Self {
+                date: posting.metadata.date,
+                effective_date: posting.metadata.effective_date,
                 account: posting.account,
                 reality: posting.reality,
                 status: posting.status,
                 comment: posting.comment,
                 amount,
+                tags: posting.metadata.tags,
             })
         } else {
             Err(Error::IncompleteTransaction(posting.into()))
@@ -276,7 +345,7 @@ impl TryFrom<ledger_parser::Posting> for Posting {
     }
 }
 
-impl Serializer for Posting {
+impl Serializer for OptionalDatePosting {
     fn write<W>(&self, writer: &mut W, settings: &SerializerSettings) -> Result<(), io::Error>
     where
         W: io::Write,
@@ -295,9 +364,64 @@ impl Serializer for Posting {
         write!(writer, "  ")?;
         self.amount.write(writer, settings)?;
 
+        let mut first = true;
+
         if let Some(ref comment) = self.comment {
             for comment in comment.split('\n') {
-                write!(writer, "{}{}; {}", settings.eol, settings.indent, comment)?;
+                if first {
+                    first = false;
+                    write!(writer, "  ")?;
+                } else {
+                    write!(writer, "{}{}", settings.eol, settings.indent)?;
+                }
+                write!(writer, "; {}", comment)?;
+            }
+        }
+
+        if self.date.is_some() || self.effective_date.is_some() {
+            if first {
+                first = false;
+                write!(writer, "  ")?;
+            } else {
+                write!(writer, "{}{}", settings.eol, settings.indent)?;
+            }
+            write!(writer, "; [")?;
+            if let Some(d) = self.date {
+                write!(writer, "{d}")?;
+            }
+            if let Some(d) = self.effective_date {
+                write!(writer, "={d}")?;
+            }
+            write!(writer, "]")?;
+        }
+
+        let (tags, tags_with_values): (Vec<_>, Vec<_>) =
+            self.tags.iter().partition(|t| t.value.is_none());
+
+        if !tags.is_empty() {
+            if first {
+                first = false;
+                write!(writer, "  ")?;
+            } else {
+                write!(writer, "{}{}", settings.eol, settings.indent)?;
+            }
+            write!(writer, "; :")?;
+            for tag in tags {
+                write!(writer, "{}:", tag.name)?;
+            }
+        }
+
+        for tag in tags_with_values {
+            if first {
+                first = false;
+                write!(writer, "  ")?;
+            } else {
+                write!(writer, "{}{}", settings.eol, settings.indent)?;
+            }
+            match &tag.value {
+                Some(TagValue::String(s)) => write!(writer, "; {}: {s}", tag.name)?,
+                Some(other_type) => write!(writer, "; {}:: {other_type}", tag.name)?,
+                None => unreachable!(),
             }
         }
 
@@ -305,7 +429,7 @@ impl Serializer for Posting {
     }
 }
 
-impl fmt::Display for Posting {
+impl fmt::Display for OptionalDatePosting {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
@@ -368,6 +492,8 @@ mod tests {
                         description: "Marek Ogarek".to_string(),
                         postings: vec![
                             Posting {
+                                date: NaiveDate::from_ymd_opt(2018, 10, 1).unwrap(),
+                                effective_date: NaiveDate::from_ymd_opt(2018, 10, 14).unwrap(),
                                 account: "TEST:ABC 123".to_string(),
                                 reality: Reality::Real,
                                 amount: Amount {
@@ -378,9 +504,12 @@ mod tests {
                                     }
                                 },
                                 status: None,
-                                comment: Some("dd".to_string())
+                                comment: Some("dd".to_string()),
+                                tags: vec![],
                             },
                             Posting {
+                                date: NaiveDate::from_ymd_opt(2018, 10, 1).unwrap(),
+                                effective_date: NaiveDate::from_ymd_opt(2018, 10, 14).unwrap(),
                                 account: "TEST:ABC 123".to_string(),
                                 reality: Reality::Real,
                                 amount: Amount {
@@ -391,7 +520,17 @@ mod tests {
                                     }
                                 },
                                 status: None,
-                                comment: None
+                                comment: None,
+                                tags: vec![
+                                    Tag {
+                                        name: "Tag1".to_string(),
+                                        value: None
+                                    },
+                                    Tag {
+                                        name: "Tag2".to_string(),
+                                        value: None
+                                    }
+                                ],
                             }
                         ]
                     },
@@ -404,6 +543,8 @@ mod tests {
                         description: "Marek Ogarek".to_string(),
                         postings: vec![
                             Posting {
+                                date: NaiveDate::from_ymd_opt(2018, 10, 1).unwrap(),
+                                effective_date: NaiveDate::from_ymd_opt(2018, 10, 1).unwrap(),
                                 account: "TEST:ABC 123".to_string(),
                                 reality: Reality::Real,
                                 amount: Amount {
@@ -414,9 +555,17 @@ mod tests {
                                     }
                                 },
                                 status: None,
-                                comment: None
+                                comment: None,
+                                tags: vec![Tag {
+                                    name: "DateTag".to_string(),
+                                    value: Some(TagValue::Date(
+                                        NaiveDate::from_ymd_opt(2017, 12, 31).unwrap()
+                                    ))
+                                }],
                             },
                             Posting {
+                                date: NaiveDate::from_ymd_opt(2017, 12, 30).unwrap(),
+                                effective_date: NaiveDate::from_ymd_opt(2017, 12, 30).unwrap(),
                                 account: "TEST:ABC 123".to_string(),
                                 reality: Reality::Real,
                                 amount: Amount {
@@ -427,7 +576,8 @@ mod tests {
                                     }
                                 },
                                 status: None,
-                                comment: None
+                                comment: None,
+                                tags: vec![],
                             }
                         ]
                     }
@@ -453,13 +603,12 @@ mod tests {
 2018-10-01=2018-10-14 ! (123) Marek Ogarek
   ; Comment Line 1
   ; Comment Line 2
-  TEST:ABC 123  $1.20
-  ; dd
-  TEST:ABC 123  $1.20
+  TEST:ABC 123  $1.20  ; dd
+  TEST:ABC 123  $1.20  ; :Tag1:Tag2:
 
 2018-10-01 Marek Ogarek
-  TEST:ABC 123  $1.20
-  TEST:ABC 123  $1.20
+  TEST:ABC 123  $1.20  ; DateTag:: [2017-12-31]
+  TEST:ABC 123  $1.20  ; [2017-12-30]
 "#;
         assert_eq!(actual, expected);
     }

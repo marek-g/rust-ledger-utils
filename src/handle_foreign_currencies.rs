@@ -85,18 +85,24 @@ where
             // add postings to trading account that will track currency gains and losses
             main_currency_amount.quantity = -main_currency_amount.quantity;
             new_postings.push(Posting {
+                date: posting.date,
+                effective_date: posting.effective_date,
                 comment: Some("Auto-generated".to_string()),
                 account: "Trading:Exchange".to_string(),
                 reality: Reality::Real,
                 status: None,
                 amount: main_currency_amount,
+                tags: vec![],
             });
             new_postings.push(Posting {
+                date: posting.date,
+                effective_date: posting.effective_date,
                 comment: Some("Auto-generated".to_string()),
                 account: "Trading:Exchange".to_string(),
                 reality: Reality::Real,
                 status: None,
                 amount: foreign_amount,
+                tags: vec![],
             });
         }
     }
@@ -117,40 +123,51 @@ where
     if transaction.postings.len() != 2 {
         return;
     }
-    if !is_asset_account(&transaction.postings[0].account)
-        || !is_asset_account(&transaction.postings[1].account)
-    {
+
+    let posting1 = &transaction.postings[0];
+    let posting2 = &transaction.postings[1];
+
+    if !is_asset_account(&posting1.account) || !is_asset_account(&posting2.account) {
         return;
     }
 
     // is this a transaction between different commodities
-    let commodity1_name = &transaction.postings[0].amount.commodity.name;
-    let commodity2_name = &transaction.postings[1].amount.commodity.name;
+    let commodity1_name = &posting1.amount.commodity.name;
+    let commodity2_name = &posting2.amount.commodity.name;
     if commodity1_name == commodity2_name {
         return;
     }
 
     // add postings to trading account that will track currency gains and losses
-    let mut amount1 = transaction.postings[0].amount.clone();
-    let mut amount2 = transaction.postings[1].amount.clone();
+    let mut amount1 = posting1.amount.clone();
+    let mut amount2 = posting2.amount.clone();
 
     amount1.quantity = -amount1.quantity;
     amount2.quantity = -amount2.quantity;
 
-    transaction.postings.push(Posting {
+    let new_posting1 = Posting {
+        date: posting1.date,
+        effective_date: posting1.effective_date,
         comment: Some("Auto-generated".to_string()),
         account: "Trading:Exchange".to_string(),
         reality: Reality::Real,
-        status: None,
+        status: posting1.status,
         amount: amount1,
-    });
-    transaction.postings.push(Posting {
+        tags: posting1.tags.clone(),
+    };
+    let new_posting2 = Posting {
+        date: posting2.date,
+        effective_date: posting2.effective_date,
         comment: Some("Auto-generated".to_string()),
         account: "Trading:Exchange".to_string(),
         reality: Reality::Real,
-        status: None,
+        status: posting2.status,
         amount: amount2,
-    });
+        tags: posting2.tags.clone(),
+    };
+
+    transaction.postings.push(new_posting1);
+    transaction.postings.push(new_posting2);
 }
 
 /// Every time there is an expense in foreign currency,
@@ -199,18 +216,24 @@ where
             // add postings to trading account that will track currency gains and losses
             main_currency_amount.quantity = -main_currency_amount.quantity;
             new_postings.push(Posting {
+                date: posting.date,
+                effective_date: posting.effective_date,
                 comment: Some("Auto-generated".to_string()),
                 account: "Trading:Exchange".to_string(),
                 reality: Reality::Real,
-                status: None,
+                status: posting.status,
                 amount: main_currency_amount,
+                tags: posting.tags.clone(),
             });
             new_postings.push(Posting {
+                date: posting.date,
+                effective_date: posting.effective_date,
                 comment: Some("Auto-generated".to_string()),
                 account: "Trading:Exchange".to_string(),
                 reality: Reality::Real,
-                status: None,
+                status: posting.status,
                 amount: foreign_amount,
+                tags: posting.tags.clone(),
             });
         }
     }
