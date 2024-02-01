@@ -54,12 +54,12 @@ impl Serializer for Ledger {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Error {
     ParseError(ledger_parser::ParseError),
-    IncompleteTransaction(ledger_parser::Posting),
-    UnbalancedTransaction(ledger_parser::Transaction),
-    BalanceAssertionFailed(ledger_parser::Transaction),
-    ZeroBalanceAssertionFailed(ledger_parser::Transaction),
-    UnbalancedVirtualWithNoAmount(ledger_parser::Transaction),
-    ZeroBalanceMultipleCurrencies(ledger_parser::Transaction),
+    IncompleteTransaction(Box<ledger_parser::Posting>),
+    UnbalancedTransaction(Box<ledger_parser::Transaction>),
+    BalanceAssertionFailed(Box<ledger_parser::Transaction>),
+    ZeroBalanceAssertionFailed(Box<ledger_parser::Transaction>),
+    UnbalancedVirtualWithNoAmount(Box<ledger_parser::Transaction>),
+    ZeroBalanceMultipleCurrencies(Box<ledger_parser::Transaction>),
 }
 
 impl std::error::Error for Error {}
@@ -106,13 +106,13 @@ impl TryFrom<ledger_parser::Ledger> for Ledger {
     ///
     /// "Balance assertions" are postings with both amount and balance provided. The calculated
     /// amount using the balance must match the given amount.
-    fn try_from(value: ledger_parser::Ledger) -> Result<Self, Self::Error> {
+    fn try_from(ledger: ledger_parser::Ledger) -> Result<Self, Self::Error> {
         let mut transactions = Vec::<ledger_parser::Transaction>::new();
         let mut commodity_prices = Vec::<ledger_parser::CommodityPrice>::new();
 
         let mut current_comment: Option<String> = None;
 
-        for item in value.items {
+        for item in ledger.items {
             match item {
                 LedgerItem::EmptyLine => {
                     current_comment = None;
@@ -179,21 +179,17 @@ impl TryFrom<ledger_parser::Transaction> for Transaction {
     /// (account name in `()`) has no amount.
     ///
     /// Ignores `balance`s. Fails if they are necessary to fill in any omitted `amount`s.
-    fn try_from(mut value: ledger_parser::Transaction) -> Result<Self, Self::Error> {
-        calculate_amounts::calculate_omitted_amounts(&mut value)?;
+    fn try_from(mut transaction: ledger_parser::Transaction) -> Result<Self, Self::Error> {
+        calculate_amounts::calculate_omitted_amounts(&mut transaction)?;
 
         Ok(Transaction {
-            comment: value.comment,
-            date: value.date,
-            effective_date: if let Some(date) = value.effective_date {
-                date
-            } else {
-                value.date
-            },
-            status: value.status,
-            code: value.code,
-            description: value.description,
-            postings: value
+            comment: transaction.comment,
+            date: transaction.date,
+            effective_date: transaction.effective_date.unwrap_or(transaction.date),
+            status: transaction.status,
+            code: transaction.code,
+            description: transaction.description,
+            postings: transaction
                 .postings
                 .into_iter()
                 .map(Posting::try_from)
@@ -265,17 +261,17 @@ impl TryFrom<ledger_parser::Posting> for Posting {
     type Error = Error;
 
     /// Fails unless all `amount`s are `Some`. Ignores `balance`s.
-    fn try_from(value: ledger_parser::Posting) -> Result<Self, Self::Error> {
-        if let Some(ledger_parser::PostingAmount { amount, .. }) = value.amount {
-            Ok(Posting {
-                account: value.account,
-                reality: value.reality,
-                status: value.status,
-                comment: value.comment,
+    fn try_from(posting: ledger_parser::Posting) -> Result<Self, Self::Error> {
+        if let Some(ledger_parser::PostingAmount { amount, .. }) = posting.amount {
+            Ok(Self {
+                account: posting.account,
+                reality: posting.reality,
+                status: posting.status,
+                comment: posting.comment,
                 amount,
             })
         } else {
-            Err(Error::IncompleteTransaction(value))
+            Err(Error::IncompleteTransaction(posting.into()))
         }
     }
 }

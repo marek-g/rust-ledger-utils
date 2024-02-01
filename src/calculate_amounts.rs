@@ -130,7 +130,7 @@ fn calculate_transaction_amounts(
                 commodity_prices,
             )
     {
-        return Err(Error::UnbalancedTransaction(transaction.clone()));
+        return Err(Error::UnbalancedTransaction(transaction.clone().into()));
     }
 
     transaction.postings = new_postings;
@@ -238,7 +238,9 @@ fn calculate_posting_amounts_from_balances(
                     // (amount also provided), it would fail due to non-zero account balance. If not a
                     // balance assertion, Ledger-cli doesn't handle this case. We could by creating
                     // multiple postings, but since Ledger-cli doesn't we haven't.
-                    return Err(Error::ZeroBalanceMultipleCurrencies(transaction.clone()));
+                    return Err(Error::ZeroBalanceMultipleCurrencies(
+                        transaction.clone().into(),
+                    ));
                 }
             },
         };
@@ -248,10 +250,12 @@ fn calculate_posting_amounts_from_balances(
             // so just check that the posting balance is equal to that.
             if let BalanceAmount(posting_balance) = posting_balance {
                 if posting_balance.quantity != current_balance {
-                    return Err(Error::BalanceAssertionFailed(transaction.clone()));
+                    return Err(Error::BalanceAssertionFailed(transaction.clone().into()));
                 }
             } else if current_balance != Decimal::ZERO {
-                return Err(Error::ZeroBalanceAssertionFailed(transaction.clone()));
+                return Err(Error::ZeroBalanceAssertionFailed(
+                    transaction.clone().into(),
+                ));
             }
         } else {
             // Posting has no amount, but has a balance, use the amount calculated from the
@@ -294,7 +298,9 @@ fn calculate_omitted_amounts_for_posting(
         Reality::Real => real_transaction_balance,
         Reality::BalancedVirtual => virtual_transaction_balance,
         Reality::UnbalancedVirtual => {
-            return Err(Error::UnbalancedVirtualWithNoAmount(transaction.clone()))
+            return Err(Error::UnbalancedVirtualWithNoAmount(
+                transaction.clone().into(),
+            ))
         }
     };
 
@@ -434,7 +440,9 @@ mod tests {
         let original_transaction = transaction.clone();
         assert_eq!(
             calculate_omitted_amounts(&mut transaction),
-            Err(Error::UnbalancedTransaction(original_transaction.clone()))
+            Err(Error::UnbalancedTransaction(
+                original_transaction.clone().into()
+            ))
         );
         assert_eq!(transaction, original_transaction);
     }
@@ -520,7 +528,9 @@ mod tests {
         let original_transaction = transaction.clone();
         assert_eq!(
             calculate_omitted_amounts(&mut transaction),
-            Err(Error::UnbalancedTransaction(original_transaction.clone()))
+            Err(Error::UnbalancedTransaction(
+                original_transaction.clone().into()
+            ))
         );
         assert_eq!(transaction, original_transaction);
     }
@@ -540,7 +550,9 @@ mod tests {
         let original_transaction = transaction.clone();
         assert_eq!(
             calculate_omitted_amounts(&mut transaction),
-            Err(Error::UnbalancedTransaction(original_transaction.clone()))
+            Err(Error::UnbalancedTransaction(
+                original_transaction.clone().into()
+            ))
         );
         assert_eq!(transaction, original_transaction);
     }
@@ -576,7 +588,7 @@ mod tests {
         assert_eq!(
             calculate_omitted_amounts(&mut transaction),
             Err(Error::UnbalancedVirtualWithNoAmount(
-                original_transaction.clone()
+                original_transaction.clone().into()
             ))
         );
         assert_eq!(transaction, original_transaction);
@@ -757,7 +769,9 @@ mod tests {
         );
         assert_eq!(
             calculate_amounts_from_balances(&mut transactions, &mut Vec::new()),
-            Err(Error::ZeroBalanceMultipleCurrencies(error_transaction))
+            Err(Error::ZeroBalanceMultipleCurrencies(
+                error_transaction.into()
+            ))
         );
     }
 
@@ -783,7 +797,7 @@ mod tests {
         );
         assert_eq!(
             calculate_amounts_from_balances(&mut transactions, &mut Vec::new()),
-            Err(Error::UnbalancedTransaction(error_transaction))
+            Err(Error::UnbalancedTransaction(error_transaction.into()))
         );
     }
 
@@ -896,7 +910,7 @@ mod tests {
         );
         assert_eq!(
             calculate_amounts_from_balances(&mut transactions, &mut Vec::new()),
-            Err(Error::UnbalancedTransaction(error_transaction))
+            Err(Error::UnbalancedTransaction(error_transaction.into()))
         );
     }
 
@@ -959,7 +973,7 @@ mod tests {
         );
         assert_eq!(
             calculate_amounts_from_balances(&mut transactions, &mut Vec::new()),
-            Err(Error::UnbalancedTransaction(error_transaction))
+            Err(Error::UnbalancedTransaction(error_transaction.into()))
         );
     }
 
@@ -1109,7 +1123,7 @@ mod tests {
         let error_transaction = transactions[1].clone();
         assert_eq!(
             calculate_amounts_from_balances(&mut transactions, &mut Vec::new()),
-            Err(Error::BalanceAssertionFailed(error_transaction))
+            Err(Error::BalanceAssertionFailed(error_transaction.into()))
         );
     }
 
@@ -1160,7 +1174,7 @@ mod tests {
         let error_transaction = transactions[1].clone();
         assert_eq!(
             calculate_amounts_from_balances(&mut transactions, &mut Vec::new()),
-            Err(Error::ZeroBalanceAssertionFailed(error_transaction))
+            Err(Error::ZeroBalanceAssertionFailed(error_transaction.into()))
         );
     }
 }

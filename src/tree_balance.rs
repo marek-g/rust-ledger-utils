@@ -35,11 +35,7 @@ impl From<Balance> for TreeBalanceNode {
             node.balance += &account_balance;
 
             for path_part in path {
-                let child_node = node
-                    .children
-                    .entry(path_part.to_string())
-                    .or_insert_with(TreeBalanceNode::new);
-                node = child_node;
+                node = node.children.entry(path_part.to_string()).or_default();
                 node.balance += &account_balance;
             }
         }

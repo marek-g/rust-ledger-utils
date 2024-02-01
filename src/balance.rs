@@ -30,7 +30,7 @@ impl Balance {
             let account_balance = self
                 .account_balances
                 .entry(posting.account.clone())
-                .or_insert_with(AccountBalance::new);
+                .or_default();
 
             account_balance
                 .amounts
@@ -56,10 +56,7 @@ impl Balance {
     }
 
     pub fn add_amount(&mut self, account: &str, amount: &Amount) {
-        let account_balance = self
-            .account_balances
-            .entry(account.to_owned())
-            .or_insert_with(AccountBalance::new);
+        let account_balance = self.account_balances.entry(account.to_owned()).or_default();
         *account_balance += amount;
     }
 
