@@ -185,7 +185,7 @@ fn get_prices_from_transactions(ledger: &Ledger) -> Vec<CommodityPrice> {
                     != Decimal::new(0, 0)
             {
                 result.push(CommodityPrice {
-                    datetime: transaction.date.and_hms(0, 0, 0),
+                    datetime: transaction.date.and_hms_opt(0, 0, 0).unwrap(),
                     commodity_name: (transaction.postings[0])
                         .amount
                         .clone()

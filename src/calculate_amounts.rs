@@ -164,7 +164,7 @@ fn get_commodity_price_from_balance(
 
         if amounts[0].quantity != Decimal::new(0, 0) && amounts[1].quantity != Decimal::new(0, 0) {
             return Some(CommodityPrice {
-                datetime: transaction_date.and_hms(0, 0, 0),
+                datetime: transaction_date.and_hms_opt(0, 0, 0).unwrap(),
                 commodity_name: amounts[0].commodity.name.clone(),
                 amount: Amount {
                     quantity: -amounts[1].quantity / amounts[0].quantity,
