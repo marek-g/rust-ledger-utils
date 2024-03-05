@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.5.0] - 2024-03-05
+
+- Update ledger-parser to 6
+
 ## [0.4.1] - 2022-02-19
 
 ### Added
@@ -22,7 +26,7 @@
 
 ### Changed
 
-- Update ledger-parser to 5 
+- Update ledger-parser to 5
 
 ## [0.1.0] - 2021-01-04
 

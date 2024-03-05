@@ -3,8 +3,8 @@ use crate::balance::Balance;
 use crate::simplified_ledger::SimplificationError;
 use chrono::NaiveDate;
 use ledger_parser::{
-    Amount, Commodity, CommodityPosition, CommodityPrice, Posting, PostingAmount, Reality,
-    Transaction,
+    Amount, Commodity, CommodityPosition, CommodityPrice, Posting, PostingAmount, PostingMetadata,
+    Reality, Transaction,
 };
 use ledger_parser::{Balance::Amount as BalanceAmount, Balance::Zero as BalanceZero};
 use rust_decimal::Decimal;
@@ -331,6 +331,11 @@ fn calculate_omitted_amounts_for_posting(
                     price: None,
                 }),
                 balance: None,
+                metadata: PostingMetadata {
+                    date: None,
+                    effective_date: None,
+                    tags: Vec::new(),
+                },
             }
         })
         .collect();
