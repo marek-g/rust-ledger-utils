@@ -332,11 +332,6 @@ fn calculate_omitted_amounts_for_posting(
                     price: None,
                 }),
                 balance: None,
-                metadata: PostingMetadata {
-                    date: None,
-                    effective_date: None,
-                    tags: Vec::new(),
-                },
             }
         })
         .collect();
