@@ -30,7 +30,7 @@ impl Balance {
             let account_balance = self
                 .account_balances
                 .entry(posting.account.clone())
-                .or_insert_with(AccountBalance::new);
+                .or_default();
 
             account_balance
                 .amounts
@@ -38,6 +38,7 @@ impl Balance {
                 .and_modify(|a| a.quantity += posting.amount.quantity)
                 .or_insert_with(|| posting.amount.clone());
         }
+        self.remove_empties();
     }
 
     pub fn get_account_balance(&self, account_prefixes: &[&str]) -> AccountBalance {
@@ -55,10 +56,7 @@ impl Balance {
     }
 
     pub fn add_amount(&mut self, account: &str, amount: &Amount) {
-        let account_balance = self
-            .account_balances
-            .entry(account.to_owned())
-            .or_insert_with(AccountBalance::new);
+        let account_balance = self.account_balances.entry(account.to_owned()).or_default();
         *account_balance += amount;
     }
 
@@ -66,7 +64,7 @@ impl Balance {
         let empties: Vec<String> = self
             .account_balances
             .iter()
-            .filter(|&(_, account_balance)| account_balance.amounts.is_empty())
+            .filter(|&(_, account_balance)| account_balance.is_zero())
             .map(|(k, _)| k.clone())
             .collect();
         for empty in empties {
